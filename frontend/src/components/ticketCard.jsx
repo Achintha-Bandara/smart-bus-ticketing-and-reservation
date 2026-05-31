@@ -1,64 +1,86 @@
-export default function TicketCard({ ticket, travelers }) {
+import { useNavigate } from 'react-router-dom'
+import { Clock, Users, Zap } from 'lucide-react'
+
+export default function TicketCard({ trip, travelers }) {
+  const navigate = useNavigate()
+  const canBook = travelers <= trip.seatsAvailable
+  const totalPrice = trip.pricePerSeat * travelers
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition">
-      <div className="flex items-center gap-4">
-        
-        {/* Left Side - Bus Details */}
-        <div className="flex-1">
-          <h3 className="text-base font-bold text-gray-800 mb-0.5">{ticket.busName}</h3>
-          <p className="text-xs text-gray-500 mb-2">{ticket.date}</p>
+    <div className={`bg-white rounded-2xl shadow-sm border transition-all hover:shadow-md hover:-translate-y-0.5 overflow-hidden ${!canBook ? 'opacity-50' : 'border-gray-100 hover:border-green-200'}`}>
+      {/* Header strip */}
+      <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-5 py-3 flex items-center justify-between">
+        <div>
+          <p className="text-white font-bold text-sm">{trip.busName}</p>
+          <p className="text-slate-400 text-xs">{trip.busPlate} · {trip.busType}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-green-400 font-extrabold text-lg">Rs. {trip.pricePerSeat.toLocaleString()}</p>
+          <p className="text-slate-500 text-xs">per seat</p>
+        </div>
+      </div>
 
-          {/* From Location */}
-          <div className="flex items-center gap-2 mb-2">
-            <span className="bg-green-600 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0">
-              ✓
-            </span>
-            <div>
-              <p className="text-sm text-gray-800 font-semibold">{ticket.from}</p>
-            </div>
+      <div className="p-5">
+        {/* Route */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex-1">
+            <p className="text-xs text-gray-500 mb-0.5">From</p>
+            <p className="font-bold text-gray-900 capitalize">{trip.fromLabel || trip.from}</p>
           </div>
-
-          {/* To Location */}
-          <div className="flex items-center gap-2">
-            <span className="bg-green-600 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0">
-              ✓
-            </span>
-            <div>
-              <p className="text-sm text-gray-800 font-semibold">{ticket.to}</p>
-            </div>
+          <div className="flex flex-col items-center gap-1 text-gray-300">
+            <div className="w-2 h-2 rounded-full border-2 border-green-500" />
+            <div className="w-px h-6 bg-gray-200" />
+            <div className="w-2 h-2 rounded-full bg-green-500" />
           </div>
-          {/* Available Seats */}
-          <p className="text-xs text-gray-600 mt-2 mb-2">Available Seats: <span className="font-bold text-gray-800">{ticket.seatsAvailable}</span></p>
+          <div className="flex-1 text-right">
+            <p className="text-xs text-gray-500 mb-0.5">To</p>
+            <p className="font-bold text-gray-900 capitalize">{trip.toLabel || trip.to}</p>
+          </div>
         </div>
 
-        {/* Dotted Divider */}
-        <div className="border-l-2 border-dotted border-gray-300 h-26"></div>
+        {/* Time row */}
+        <div className="flex items-center justify-between text-sm text-gray-600 mb-4 bg-gray-50 rounded-xl px-4 py-2.5">
+          <div className="flex items-center gap-1.5">
+            <Clock size={14} className="text-green-600" />
+            <span className="font-semibold">{trip.time}</span>
+          </div>
+          <span className="text-gray-400 text-xs">→</span>
+          <span className="font-semibold">{trip.arrivalTime}</span>
+          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+            <Users size={13} />
+            <span>{trip.seatsAvailable} left</span>
+          </div>
+        </div>
 
-        {/* Right Side - Time, Button, Price */}
-        <div className="flex-1 flex flex-col items-center justify-center">
-          {/* Time */}
-          <p className="text-2xl font-bold text-black mb-2">{ticket.time}</p>
+        {/* Amenities */}
+        {trip.amenities?.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {trip.amenities.map(a => (
+              <span key={a} className="flex items-center gap-1 text-xs bg-green-50 text-green-700 border border-green-100 rounded-full px-2.5 py-1">
+                <Zap size={10} /> {a}
+              </span>
+            ))}
+          </div>
+        )}
 
-
-          {/* Buy Ticket Button */}
-          <button 
-            disabled={travelers > ticket.seatsAvailable}
-            className={`font-bold py-1.5 px-5 rounded-full transition mb-2 text-sm ${
-              travelers > ticket.seatsAvailable
-                ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                : 'bg-green-600 hover:bg-green-700 text-white'
+        {/* Total + CTA */}
+        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+          <div>
+            <p className="text-xs text-gray-500">Total for {travelers} {travelers === 1 ? 'seat' : 'seats'}</p>
+            <p className="font-extrabold text-gray-900 text-lg">Rs. {totalPrice.toLocaleString()}</p>
+          </div>
+          <button
+            disabled={!canBook}
+            onClick={() => navigate('/booking/confirm', { state: { trip, travelers } })}
+            className={`font-bold py-2.5 px-5 rounded-xl transition text-sm ${canBook
+              ? 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
+              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
             }`}
           >
-            {travelers > ticket.seatsAvailable ? 'Buy Ticket' : 'Buy Ticket'}
+            {canBook ? 'Book Now' : 'Full'}
           </button>
-
-          {/* Price */}
-          <p className="text-xs text-gray-600">Price/Seat:</p>
-          <p className="text-sm font-bold text-red-600">Rs {ticket.pricePerSeat}</p>
-          <p className="text-xs text-gray-600 mt-1">Total ({travelers}):</p>
-          <p className="text-sm font-bold text-green-600">Rs {(ticket.pricePerSeat * travelers).toFixed(2)}</p>
         </div>
       </div>
     </div>
-  );
+  )
 }

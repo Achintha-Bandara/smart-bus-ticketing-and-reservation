@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import getOnBus from '../../public/icons/getOnBus.png'
-import getOutBus from '../../public/icons/getOutBus.png'
+
+const getOnBus = '/icons/getOnBus.png'
+const getOutBus = '/icons/getOutBus.png'
 
 const PLACES = [
   'Colombo',
